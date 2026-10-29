@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>약물(카페인/졸피뎀)과 자율신경계 가상 실험실</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for data visualization and graphing -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <header class="bg-indigo-700 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center">
+            <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+                <div class="bg-indigo-600 p-2 rounded-xl text-2xl shadow-inner">
+                    <i class="fa-solid fa-pills text-amber-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">생명과학I 가상 실험실 (심화)</h1>
+                    <p class="text-xs text-indigo-200">카페인 vs 졸피뎀과 자율신경계</p>
+                </div>
+            </div>
+            <div class="bg-indigo-800 px-4 py-2 rounded-lg text-sm border border-indigo-600 shadow-sm flex items-center space-x-2">
+                <i class="fa-solid fa-graduation-cap text-indigo-300"></i>
+                <span>주제: 신경전달물질 및 자율신경 조절</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left Panel: Experiment Controls & Parameters -->
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between space-y-6">
+            <div>
+                <div class="flex items-center space-x-2 border-b border-slate-100 pb-3 mb-4">
+                    <i class="fa-solid fa-sliders text-indigo-600"></i>
+                    <h2 class="font-bold text-lg text-slate-900">실험 조건 설정</h2>
+                </div>
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">투여 약물 선택</label>
+                        <select id="drugType" onchange="onDrugChange()" class="w-full p-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium text-slate-800">
+                            <option value="caffeine">카페인</option>
+                            <option value="zolpidem">졸피뎀</option>
+                        </select>
+                    </div>
+
+                    <div id="doseContainer">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">
+                            <span id="doseLabelText">카페인 투여량</span>: <span id="doseVal" class="text-indigo-600 font-bold">100</span> <span id="doseUnit">mg</span>
+                        </label>
+                        <input type="range" id="drugDose" min="50" max="300" step="25" value="100" 
+                            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                            oninput="updateSliderValue(this.value)">
+                        <div class="flex justify-between text-xs text-slate-400 mt-1">
+                            <span id="minLabel">연한 커피 (50mg)</span>
+                            <span id="maxLabel">고용량 (300mg)</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">반복 실험 횟수: <span id="countVal" class="text-indigo-600 font-bold">5</span> 회</label>
+                        <input type="range" id="expCount" min="3" max="8" step="1" value="5" 
+                            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                            oninput="updateCountValue(this.value)">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">참가자 생체 특성 (기초 대사)</label>
+                        <select id="userProfile" class="w-full p-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                            <option value="normal">일반 고등학생 (안정심박수 ~72 bpm)</option>
+                            <option value="sensitive">약물 민감군</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-2">
+                        <button onclick="runExperiment()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition duration-200 flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-play"></i>
+                            <span>가상 실험 시뮬레이션 실행</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div></div>
+        </section>
+
+        <!-- Right Panel: Data Table & Interactive Graph & Analysis -->
+        <section class="lg:col-span-2 space-y-8">
+            
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-line text-indigo-600"></i>
+                        <h2 id="chartTitle" class="font-bold text-lg text-slate-900">심박수 비교 시각화 그래프 (카페인)</h2>
+                    </div>
+                </div>
+                <div class="relative h-72 w-full">
+                    <canvas id="heartRateChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center space-x-2 mb-4">
+                    <i class="fa-solid fa-table text-indigo-600"></i>
+                    <h2 class="font-bold text-lg text-slate-900">실험 결과 데이터 테이블</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                                <th class="p-3 font-semibold rounded-l-lg">실험 횟수</th>
+                                <th class="p-3 font-semibold">섭취 전 안정시 심박수 (bpm)</th>
+                                <th id="tableAfterHeader" class="p-3 font-semibold rounded-r-lg">카페인 섭취 30분 후 (bpm)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="divide-y divide-slate-100">
+                            <!-- Populated via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-pen-nib text-indigo-600"></i>
+                        <h2 class="font-bold text-lg text-slate-900">실험 결과 분석</h2>
+                    </div>
+                    <span class="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">보고서 작성 공간</span>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">1. 카페인과 졸피뎀 섭취 시 심박수의 변화를 서술하시오.</label>
+                        <textarea id="reportQ1" rows="2" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="예: 시뮬레이션 결과 투여 후 심박수가 증가/감소하였으며, 이는 자율신경의 영향으로 판단된다."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">2. 카페인과 졸피뎀의 작용을 교감 신경의 작용과 연관시켜 설명하시오.</label>
+                        <textarea id="reportQ2" rows="2" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="예: 카페인은 교감신경을 활성화시키고, 졸피뎀은..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">3. 신경계에 이상이 있는 환자의 발병 원인을 찾기 위해, 표적 기관 직전의 신경 세포 말단에서 분비하는 신경 전달 물질의 농도를 측정하였다. 환자의 발병 원인을 논리적으로 서술하시오 (단, 환자의 증상은 심장에서만 나타났다).</label>
+                        <div class="my-3 overflow-x-auto">
+                            <table class="w-full text-center border-collapse text-xs bg-slate-50 border border-slate-200 rounded-lg">
+                                <thead>
+                                    <tr class="bg-slate-200 text-slate-700">
+                                        <th class="p-2 border border-slate-300">구분</th>
+                                        <th class="p-2 border border-slate-300" colspan="2">정상인</th>
+                                        <th class="p-2 border border-slate-300" colspan="2">환자</th>
+                                    </tr>
+                                    <tr class="bg-slate-100 text-slate-600 text-[11px]">
+                                        <th class="p-1.5 border border-slate-300">신경전달물질</th>
+                                        <th class="p-1.5 border border-slate-300">아세틸콜린 농도</th>
+                                        <th class="p-1.5 border border-slate-300">노르에피네프린 농도</th>
+                                        <th class="p-1.5 border border-slate-300">아세틸콜린 농도</th>
+                                        <th class="p-1.5 border border-slate-300">노르에피네프린 농도</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 bg-white">
+                                    <tr>
+                                        <td class="p-2 border border-slate-300 font-semibold">운동 신경</td>
+                                        <td class="p-2 border border-slate-300">100</td>
+                                        <td class="p-2 border border-slate-300">0</td>
+                                        <td class="p-2 border border-slate-300">100</td>
+                                        <td class="p-2 border border-slate-300">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2 border border-slate-300 font-semibold">교감 신경</td>
+                                        <td class="p-2 border border-slate-300">0</td>
+                                        <td class="p-2 border border-slate-300">100</td>
+                                        <td class="p-2 border border-slate-300">0</td>
+                                        <td class="p-2 border border-slate-300">100</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2 border border-slate-300 font-semibold">부교감 신경</td>
+                                        <td class="p-2 border border-slate-300">100</td>
+                                        <td class="p-2 border border-slate-300">0</td>
+                                        <td class="p-2 border border-slate-300">100</td>
+                                        <td class="p-2 border border-slate-300">0</td>
+                                    </tr>
+                                    <tr class="bg-indigo-50 font-medium">
+                                        <td class="p-2 border border-slate-300">증상</td>
+                                        <td class="p-2 border border-slate-300" colspan="2">심장박동 정상</td>
+                                        <td class="p-2 border border-slate-300" colspan="2">심장박동수 감소</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <textarea id="reportQ3" rows="3" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="환자의 발병 원인과 신경전달물질 분비 변화를 논리적으로 서술하세요."></textarea>
+                    </div>
+                    <div class="flex justify-end pt-2">
+                        <button onclick="saveStudentReport()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl text-sm transition duration-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>보고서 내용 저장하기</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        <p>고등학교 2학년 생명과학I 신경계 가상실험 솔루션 &copy; 2026</p>
+    </footer>
+
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 flex items-center space-x-2 z-50 text-sm">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage">클립보드에 복사되었습니다.</span>
+    </div>
+
+    <script>
+        let heartRateChart = null;
+        let currentExperimentData = [];
+
+        function onDrugChange() {
+            const drug = document.getElementById('drugType').value;
+            const doseInput = document.getElementById('drugDose');
+            const doseLabel = document.getElementById('doseLabelText');
+            const doseUnit = document.getElementById('doseUnit');
+            const minLabel = document.getElementById('minLabel');
+            const maxLabel = document.getElementById('maxLabel');
+
+            if (drug === 'caffeine') {
+                doseLabel.innerText = '카페인 투여량';
+                doseUnit.innerText = 'mg';
+                doseInput.min = 50;
+                doseInput.max = 300;
+                doseInput.step = 25;
+                doseInput.value = 100;
+                minLabel.innerText = '연한 커피 (50mg)';
+                maxLabel.innerText = '고용량 (300mg)';
+            } else {
+                doseLabel.innerText = '졸피뎀 투여량';
+                doseUnit.innerText = 'mg';
+                doseInput.min = 5;
+                doseInput.max = 20;
+                doseInput.step = 5;
+                doseInput.value = 10;
+                minLabel.innerText = '저용량 (5mg)';
+                maxLabel.innerText = '고용량 (20mg)';
+            }
+            updateSliderValue(doseInput.value);
+            runExperiment();
+        }
+
+        function updateSliderValue(val) {
+            document.getElementById('doseVal').innerText = val;
+        }
+
+        function updateCountValue(val) {
+            document.getElementById('countVal').innerText = val;
+            runExperiment();
+        }
+
+        function getRandomArbitrary(min, max, seed) {
+            let x = Math.sin(seed++) * 10000;
+            return min + (x - Math.floor(x)) * (max - min);
+        }
+
+        function runExperiment() {
+            const drug = document.getElementById('drugType').value;
+            const dose = parseInt(document.getElementById('drugDose').value);
+            const count = parseInt(document.getElementById('expCount').value);
+            const profile = document.getElementById('userProfile').value;
+
+            let baseMean = 72;
+            let baseSpread = 3;
+
+            if (profile === 'sensitive') {
+                baseSpread = 4;
+            }
+
+            currentExperimentData = [];
+
+            for (let i = 0; i < count; i++) {
+                let baseline = Math.round((baseMean + (Math.sin(i * 1.5) * baseSpread)) * 10) / 10;
+                let change = 0;
+
+                if (drug === 'caffeine') {
+                    let sensitivity = (dose / 100.0) * (profile === 'sensitive' ? 1.4 : 1.0);
+                    change = Math.round((getRandomArbitrary(10, 16, i * 42 + dose) * sensitivity) * 10) / 10;
+                } else {
+                    let sensitivity = (dose / 10.0) * (profile === 'sensitive' ? 1.3 : 1.0);
+                    change = -Math.round((getRandomArbitrary(4, 9, i * 33 + dose) * sensitivity) * 10) / 10;
+                }
+
+                let afterHR = Math.round((baseline + change) * 10) / 10;
+
+                currentExperimentData.push({
+                    round: `${i + 1}회차`,
+                    baseline: baseline,
+                    after: afterHR,
+                    change: change
+                });
+            }
+            
+            if (drug === 'caffeine') {
+                document.getElementById('chartTitle').innerText = `심박수 비교 시각화 그래프 (카페인 ${dose}mg)`;
+                document.getElementById('tableAfterHeader').innerText = `카페인 섭취 30분 후 (bpm)`;
+            } else {
+                document.getElementById('chartTitle').innerText = `심박수 비교 시각화 그래프 (졸피뎀 ${dose}mg)`;
+                document.getElementById('tableAfterHeader').innerText = `졸피뎀 복용 30분 후 (bpm)`;
+            }
+
+            renderTable();
+            renderChart(drug);
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+            const drug = document.getElementById('drugType').value;
+
+            currentExperimentData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition duration-150 border-b border-slate-100";
+                
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-slate-900">${row.round}</td>
+                    <td class="p-3 text-slate-600">${row.baseline} bpm</td>
+                    <td class="p-3 ${drug === 'caffeine' ? 'text-rose-600' : 'text-blue-600'} font-semibold rounded-r-lg">${row.after} bpm</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderChart(drug) {
+            const ctx = document.getElementById('heartRateChart').getContext('2d');
+            
+            const labels = currentExperimentData.map(d => d.round);
+            const baselineData = currentExperimentData.map(d => d.baseline);
+            const afterData = currentExperimentData.map(d => d.after);
+
+            if (heartRateChart) {
+                heartRateChart.destroy();
+            }
+
+            let afterColorBg = drug === 'caffeine' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(59, 130, 246, 0.2)';
+            let afterColorBorder = drug === 'caffeine' ? 'rgba(244, 63, 94, 1)' : 'rgba(59, 130, 246, 1)';
+            let afterLabelText = drug === 'caffeine' ? '카페인 섭취 후' : '졸피뎀 복용 후';
+
+            heartRateChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '복용 전 (안정 상태)',
+                            data: baselineData,
+                            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                            borderColor: 'rgba(99, 102, 241, 1)',
+                            borderWidth: 1.5,
+                            borderRadius: 6
+                        },
+                        {
+                            label: afterLabelText,
+                            data: afterData,
+                            backgroundColor: afterColorBg,
+                            borderColor: afterColorBorder,
+                            borderWidth: 1.5,
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 40,
+                            max: 130,
+                            grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { font: { family: 'Inter', size: 12 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function saveStudentReport() {
+            window.open('https://docs.google.com/forms/d/e/1FAIpQLSe4n0D6mW4DipowBJTTHSrMi2ebbwimB1G0idJofB7nq6UCFg/viewform?usp=publish-editor', '_blank');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        window.onload = function() {
+            runExperiment();
+        };
+    </script>
+</body>
+</html>
